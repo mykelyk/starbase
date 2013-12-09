@@ -113,6 +113,8 @@ class HttpRequest(object):
 
         response_raw = self.response
 
+        response_raw.raise_for_status()
+
         if self.__connection.content_type == MEDIA_TYPE_JSON:
             try:
                 response_content = self.response.json()
