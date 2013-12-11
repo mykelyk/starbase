@@ -9,7 +9,7 @@ import json
 
 from six import string_types, PY2, PY3
 
-from starbase.exceptions import InvalidArguments
+from starbase.exceptions import InvalidArguments, ResponseParseError
 from starbase.content_types import DEFAULT_CONTENT_TYPE
 from starbase.defaults import PERFECT_DICT
 from starbase.client.transport import HttpRequest
@@ -218,9 +218,6 @@ class Table(object):
         :param bool raw:
         :return dict:
         """
-        if not self.exists():
-            return None
-
         if perfect_dict is None:
             perfect_dict = self.connection.perfect_dict
 
@@ -249,8 +246,9 @@ class Table(object):
                 res = Table._extract_usable_data(response_content, perfect_dict=perfect_dict, with_row_id=False)
                 if isinstance(res, (list, tuple)) and 1 == len(res):
                     return res[0]
-            except:
-                pass
+                raise ResponseParseError('No usable data found in response')  
+            except Exception as exc:
+                raise ResponseParseError('Failed to parse response: %s' % exc)
 
     def fetch(self, row, columns=None, timestamp=None, number_of_versions=None, raw=False, perfect_dict=None):
         """

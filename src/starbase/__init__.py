@@ -6,3 +6,4 @@ __all__ = ('Connection', 'Table')
 
 from starbase.client.connection import Connection
 from starbase.client.table import Table
+from starbase.exceptions import *
