@@ -38,3 +38,9 @@ class DoesNotExist(BaseException):
     """
     Does not exist.
     """
+
+
+class AlreadyExists(BaseException):
+    """
+    Already exists.
+    """
