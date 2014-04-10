@@ -233,6 +233,11 @@ class Table(object):
 
         url += self._build_url_parts(columns)
 
+        if timestamp:
+            if isinstance(timestamp, str):
+                timestamp = int(timestamp)
+            url += "/{timestamp},{timestamp_plus}/".format(timestamp=str(timestamp), timestamp_plus=str(timestamp + 1))
+
         # If should be versioned, adding additional URL parts.
         if number_of_versions is not None:
             assert isinstance(number_of_versions, int)
