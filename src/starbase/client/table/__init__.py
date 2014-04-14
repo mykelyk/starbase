@@ -346,19 +346,12 @@ class Table(object):
         :param dict columns:
         :return str:
         """
-        # Base URL
-        url = ''
-
         if PY3:
             row_hash = base64.b64encode(row.encode('utf8')).decode('utf8')
         else:
             row_hash = base64.b64encode(row)
 
-        if 1 == len(columns):
-            cf = list(columns.keys())[0]
-            url = "{table_name}/{row}/{cf}".format(table_name=self.name, row=row_hash, cf=cf)
-        else:
-            url = "{table_name}/{row}".format(table_name=self.name, row=row_hash)
+        url = "{table_name}/{row}".format(table_name=self.name, row=row_hash)
 
         return url
     _build_post_url = _build_put_url
