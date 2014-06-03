@@ -5,7 +5,7 @@ __license__ = 'GPL 2.0/LGPL 2.1'
 __all__ = ('Table',)
 
 import base64
-import json
+import logging
 
 from six import string_types, PY3
 
@@ -17,6 +17,10 @@ from starbase.client.transport.methods import GET, PUT, POST, DELETE
 from starbase.client.table.scanner import Scanner
 from starbase.client.table.batch import Batch
 from starbase.client.helpers import build_json_data
+
+
+logger = logging.getLogger('table')
+
 
 class Table(object):
     """
@@ -124,7 +128,17 @@ class Table(object):
                                 d_val = d_val.decode('utf8')
 
                         if d_key in extracted_cell_data:
-                            extracted_cell_data[d_key].update(d_val)
+                            overlap = set(extracted_cell_data[d_key].keys()) & set(d_val.keys())
+                            if overlap:
+                                if len(overlap) == 1:
+                                    plural = ''
+                                    keys = overlap.pop()
+                                else:
+                                    plural = 's'
+                                    keys = '[{}]'.format(','.join(list(overlap)))
+                                logger.error('Was just about to lose data for key{} {}:{}'.format(plural, d_key, keys))
+                            else:
+                                extracted_cell_data[d_key].update(d_val)
                         else:
                             extracted_cell_data[d_key] = d_val
             else:
@@ -194,11 +208,11 @@ class Table(object):
 
         :return dict:
         """
-        return build_json_data(row, columns, timestamp=timestamp, encode_content=encode_content, \
+        return build_json_data(row, columns, timestamp=timestamp, encode_content=encode_content,
                                with_row_declaration=with_row_declaration)
 
-    def _get(self, row, columns=None, timestamp=None, decode_content=True, number_of_versions=None, raw=False, \
-             perfect_dict=None, fail_silently=True):
+    def _get(self, row, columns, timestamp, decode_content, number_of_versions,
+             raw, perfect_dict, fail_silently):
         """
         Retrieves one or more cells from a full row, or one or more specified columns in the row, with optional
         filtering via timestamp, and an optional restriction on the maximum number of versions to return.
@@ -237,7 +251,6 @@ class Table(object):
             if isinstance(timestamp, str):
                 timestamp = int(timestamp)
             url += "/{timestamp},{timestamp_plus}/".format(timestamp=str(timestamp), timestamp_plus=str(timestamp + 1))
-
         # If should be versioned, adding additional URL parts.
         if number_of_versions is not None:
             assert isinstance(number_of_versions, int)
@@ -261,7 +274,7 @@ class Table(object):
                 if not fail_silently:
                     raise ParseError("Failed to parse the HTTP response. Error details: {0}".format(str(e)))
 
-    def fetch(self, row, columns=None, timestamp=None, number_of_versions=None, raw=False, perfect_dict=None, \
+    def fetch(self, row, columns=None, timestamp=None, number_of_versions=1, raw=False, perfect_dict=None, \
               fail_silently=True):
         """
         Fetches a single row from table.

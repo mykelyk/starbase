@@ -14,6 +14,7 @@ from starbase.json_decoder import json_decode
 from starbase.content_types import MEDIA_TYPE_JSON
 from starbase.client.transport.methods import GET, PUT, POST, DELETE, METHODS, DEFAULT_METHOD
 
+
 class HttpResponse(object):
     """
     HTTP response.
