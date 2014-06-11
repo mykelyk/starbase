@@ -116,7 +116,6 @@ class HttpRequest(object):
         if self.__connection.user and self.__connection.password:
             request_data['auth'] = HTTPBasicAuth(self.__connection.user, self.__connection.password)
 
-        self.response = None
         def call():
             # For the sake of simplicity the `requests` library replaced the `urllib2`.
             if GET == method:
