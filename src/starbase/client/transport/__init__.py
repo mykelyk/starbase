@@ -131,13 +131,13 @@ class HttpRequest(object):
             try:
                 self.response = call()
                 break
-            except RequestException:
+            except RequestException as e:
                 if i < retries:
                     delay = 10*(2**i)
-                    logger.info("Hbase returned error, sleeping for {} seconds".format(delay))
+                    logger.info("Hbase returned error: {}, sleeping for {} seconds".format(e, delay))
                     time.sleep(delay*1000)
                 else:
-                    raise
+                    raise e
 
 
     def get_response(self):
