@@ -5,14 +5,20 @@ __license__ = 'GPL 2.0/LGPL 2.1'
 __all__ = ('HttpRequest', 'HttpResponse')
 
 import json
+import logging
+import time
+
 import requests
 from requests.auth import HTTPBasicAuth
-
+from requests.exceptions import RequestException
 from six import string_types
 
 from starbase.json_decoder import json_decode
 from starbase.content_types import MEDIA_TYPE_JSON
 from starbase.client.transport.methods import GET, PUT, POST, DELETE, METHODS, DEFAULT_METHOD
+
+
+logger = logging.getLogger('HttpResponse')
 
 
 class HttpResponse(object):
@@ -73,7 +79,7 @@ class HttpRequest(object):
     :param str method:
     :param bool fail_silently:
     """
-    def __init__(self, connection, url='', data={}, decode_content=False, method=DEFAULT_METHOD, fail_silently=True):
+    def __init__(self, connection, url='', data={}, decode_content=False, method=DEFAULT_METHOD, fail_silently=True, retries=3):
         """
         See the docs above.
         """
@@ -110,15 +116,29 @@ class HttpRequest(object):
         if self.__connection.user and self.__connection.password:
             request_data['auth'] = HTTPBasicAuth(self.__connection.user, self.__connection.password)
 
-        # For the sake of simplicity the `requests` library replaced the `urllib2`.
-        if GET == method:
-            self.response = requests.get(**request_data)
-        elif PUT == method:
-            self.response = requests.put(**request_data)
-        elif POST == method:
-            self.response = requests.post(**request_data)
-        elif DELETE == method:
-            self.response = requests.delete(**request_data)
+        self.response = None
+        def call():
+            # For the sake of simplicity the `requests` library replaced the `urllib2`.
+            if GET == method:
+                return requests.get(**request_data)
+            elif PUT == method:
+                return requests.put(**request_data)
+            elif POST == method:
+                return requests.post(**request_data)
+            elif DELETE == method:
+                return requests.delete(**request_data)
+
+        for i in range(retries + 1):
+            try:
+                self.response = call()
+            except RequestException:
+                if i < retries:
+                    delay = 10*(2**i)
+                    logger.info("Hbase returned error, sleeping for {} seconds".format(delay))
+                    time.sleep(delay*1000)
+                else:
+                    raise
+
 
     def get_response(self):
         """
