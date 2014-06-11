@@ -131,6 +131,7 @@ class HttpRequest(object):
         for i in range(retries + 1):
             try:
                 self.response = call()
+                break
             except RequestException:
                 if i < retries:
                     delay = 10*(2**i)
