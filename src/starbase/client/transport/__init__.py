@@ -134,7 +134,7 @@ class HttpRequest(object):
             except RequestException as e:
                 if i < retries:
                     delay = 10*(2**i)
-                    logger.info("Hbase returned error: {}, sleeping for {} seconds".format(e, delay))
+                    logger.warn("Hbase returned error: {}, sleeping for {} seconds".format(e, delay))
                     time.sleep(delay*1000)
                 else:
                     raise e
