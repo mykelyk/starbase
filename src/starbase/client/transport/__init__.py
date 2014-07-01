@@ -16,6 +16,7 @@ from six import string_types
 from starbase.json_decoder import json_decode
 from starbase.content_types import MEDIA_TYPE_JSON
 from starbase.client.transport.methods import GET, PUT, POST, DELETE, METHODS, DEFAULT_METHOD
+from starbase.defaults import RETRIES, RETRY_DELAY
 
 
 logger = logging.getLogger('HttpResponse')
@@ -79,7 +80,7 @@ class HttpRequest(object):
     :param str method:
     :param bool fail_silently:
     """
-    def __init__(self, connection, url='', data={}, decode_content=False, method=DEFAULT_METHOD, fail_silently=True, retries=3):
+    def __init__(self, connection, url='', data={}, decode_content=False, method=DEFAULT_METHOD, fail_silently=True):
         """
         See the docs above.
         """
@@ -127,15 +128,15 @@ class HttpRequest(object):
             elif DELETE == method:
                 return requests.delete(**request_data)
 
-        for i in range(retries + 1):
+        for i in range(RETRIES + 1):
             try:
                 self.response = call()
                 break
             except RequestException as e:
-                if i < retries:
-                    delay = 10*(2**i)
+                if i < RETRIES:
+                    delay = RETRY_DELAY*(2**i)
                     logger.warn("Hbase returned error: {}, sleeping for {} seconds".format(e, delay))
-                    time.sleep(delay*1000)
+                    time.sleep(delay)
                 else:
                     raise e
 

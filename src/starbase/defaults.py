@@ -20,3 +20,6 @@ USER = ''
 PASSWORD = ''
 
 DEBUG = False
+
+RETRIES = 3
+RETRY_DELAY = 10
