@@ -19,6 +19,13 @@ from starbase.client.transport.methods import GET, PUT, POST, DELETE, METHODS, D
 from starbase.defaults import RETRIES, RETRY_DELAY
 
 
+def GET_RETRY_DELAY():
+    """
+    Moved to seperate function to aid mocking in tests
+    """
+    return RETRY_DELAY
+
+
 logger = logging.getLogger('HttpResponse')
 
 
@@ -117,29 +124,32 @@ class HttpRequest(object):
         if self.__connection.user and self.__connection.password:
             request_data['auth'] = HTTPBasicAuth(self.__connection.user, self.__connection.password)
 
-        def call():
-            # For the sake of simplicity the `requests` library replaced the `urllib2`.
-            if GET == method:
-                return requests.get(**request_data)
-            elif PUT == method:
-                return requests.put(**request_data)
-            elif POST == method:
-                return requests.post(**request_data)
-            elif DELETE == method:
-                return requests.delete(**request_data)
-
         for i in range(RETRIES + 1):
             try:
-                self.response = call()
+                self.response = self.call(method, request_data)
                 break
             except RequestException as e:
                 if i < RETRIES:
-                    delay = RETRY_DELAY*(2**i)
+                    delay = GET_RETRY_DELAY()*(2**i)
                     logger.warn("Hbase returned error: {}, sleeping for {} seconds".format(e, delay))
                     time.sleep(delay)
                 else:
                     raise e
 
+    def call(self, method, request_data):
+        """
+        For the sake of simplicity the `requests` library replaced the `urllib2`.
+
+        Moved to seperate function to aid mocking in tests
+        """
+        if GET == method:
+            return requests.get(**request_data)
+        elif PUT == method:
+            return requests.put(**request_data)
+        elif POST == method:
+            return requests.post(**request_data)
+        elif DELETE == method:
+            return requests.delete(**request_data)
 
     def get_response(self):
         """
