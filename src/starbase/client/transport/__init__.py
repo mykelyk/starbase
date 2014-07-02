@@ -127,6 +127,7 @@ class HttpRequest(object):
         for i in range(RETRIES + 1):
             try:
                 self.response = self.call(method, request_data)
+                self.response.raise_for_status()
                 break
             except RequestException as e:
                 if i < RETRIES:
