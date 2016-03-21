@@ -21,5 +21,5 @@ PASSWORD = ''
 
 DEBUG = False
 
-RETRIES = 1
+RETRIES = 3
 RETRY_DELAY = 3
