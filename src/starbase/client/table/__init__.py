@@ -85,11 +85,11 @@ class Table(object):
         if perfect_dict:
             if PY3:
                 if isinstance(column_data['column'], bytes):
-                    column = column_data['column'].decode('utf8').split(':')
+                    column = column_data['column'].decode('utf8').split(':', 1)
                 else:
-                    column = column_data['column'].split(':')
+                    column = column_data['column'].split(':', 1)
             else:
-                column = column_data['column'].split(':')
+                column = column_data['column'].split(':', 1)
 
             assert 2 == len(column)
             column_family, key = column
