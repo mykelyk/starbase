@@ -130,7 +130,7 @@ class HttpRequest(object):
                 self.response.raise_for_status()
                 break
             except RequestException as e:
-                if i < RETRIES:
+                if i < RETRIES and self.response.status_code != 404:
                     delay = GET_RETRY_DELAY()*(2**i)
                     logger.warn("Hbase returned error: {}, sleeping for {} seconds".format(e, delay))
                     time.sleep(delay)
